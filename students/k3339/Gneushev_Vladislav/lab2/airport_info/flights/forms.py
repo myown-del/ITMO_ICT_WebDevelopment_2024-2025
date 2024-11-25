@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Ticket, FlightReview
+from .models import Ticket, FlightReview, TicketReservation
 
 
 class TicketForm(forms.ModelForm):
@@ -11,18 +11,19 @@ class TicketForm(forms.ModelForm):
 
 class TicketReservationForm(forms.ModelForm):
     class Meta:
-        model = Ticket
-        fields = ['seat_number']
+        model = TicketReservation
+        fields = []
 
     def __init__(self, *args, **kwargs):
         self.flight = kwargs.pop('flight', None)
         super().__init__(*args, **kwargs)
 
-    def clean_seat_number(self):
-        seat_number = self.cleaned_data['seat_number']
-        if Ticket.objects.filter(flight=self.flight, seat_number=seat_number).exists():
-            raise forms.ValidationError("This seat is already reserved. Please choose another.")
-        return seat_number
+    def clean(self):
+        cleaned_data = super().clean()
+        passenger = self.instance.passenger
+        if TicketReservation.objects.filter(flight=self.flight, passenger=passenger).exists():
+            raise forms.ValidationError("You have already reserved a ticket for this flight.")
+        return cleaned_data
 
 
 class ReviewForm(forms.ModelForm):

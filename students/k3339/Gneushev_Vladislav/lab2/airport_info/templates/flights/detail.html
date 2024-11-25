@@ -40,50 +40,77 @@
             </div>
 
             <div class="ticket-options">
-                <a href="{% url 'reserve_ticket' flight.id %}" class="btn btn-primary">Reserve Ticket</a>
+                {% if is_admin %}
+                    <h2>All Reservations</h2>
+                    <ul class="reservation-list">
+                        {% for reservation in reservations %}
+                        <li class="reservation-item">
+                            <div class="reservation-info">
+                                <strong>Passenger:</strong> {{ reservation.passenger.username }}
+                            </div>
+                            <div class="reservation-actions">
+                                <a href="{% url 'confirm_reservation' reservation.id %}" class="btn btn-primary">Confirm</a>
+                                <a href="{% url 'delete_reservation' reservation.id %}" class="btn btn-secondary">Delete</a>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li>No reservations available.</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    {% if user_reservation %}
+                        <h2>Your Reservation</h2>
+                        <p>
+                            You have requested a ticket for this flight.
+                            <a href="{% url 'delete_reservation' user_reservation.id %}" class="btn btn-secondary">Cancel Reservation</a>
+                        </p>
+                    {% else %}
+                        <a href="{% url 'reserve_ticket' flight.id %}" class="btn btn-primary">Reserve Ticket</a>
+                    {% endif %}
+                {% endif %}
             </div>
 
             <br>
             <br>
 
             <h2>Passengers</h2>
-                <ul class="ticket-list">
-                    {% for ticket in tickets %}
-                    <li class="ticket-item">
-                        <div class="info">
-                            <strong>Passenger:</strong> {{ ticket.passenger.username }}
-                            <strong>Seat:</strong> {{ ticket.seat_number }}
-                        </div>
-                        <div class="links">
-                            {% if ticket.passenger == request.user %}
-                                <a href="{% url 'edit_ticket' ticket.id %}" class="edit-link">Edit</a>
-                                <a href="{% url 'delete_ticket' ticket.id %}" class="delete-link">Delete</a>
-                            {% endif %}
-                        </div>
-                    </li>
-                    {% empty %}
-                    <li>No tickets reserved for this flight.</li>
-                    {% endfor %}
-                </ul>
-        </div>
-        <br>
-        <div class="reviews-sidebar">
-                <h2>Reviews</h2>
-                {% for review in reviews %}
-                    <div class="review">
-                        <p><strong>{{ review.author.username }}</strong> - Rating: {{ review.rating }}/10</p>
-                        <p>{{ review.text }}</p>
-                        <hr>
+            <ul class="ticket-list">
+                {% for ticket in tickets %}
+                <li class="ticket-item">
+                    <div class="info">
+                        <strong>Passenger:</strong> {{ ticket.passenger.username }}
+                        <strong>Seat:</strong> {{ ticket.seat_number }}
                     </div>
+                    <div class="links">
+                        {% if request.user == ticket.passenger or request.user.is_staff %}
+                            <a href="{% url 'delete_ticket' ticket.id %}" class="delete-link">Delete</a>
+                        {% endif %}
+                    </div>
+                </li>
                 {% empty %}
-                    <p>No reviews yet. Be the first to <a href="{% url 'add_review' flight.id %}">add a review</a>.</p>
+                <li>No passengers on this flight.</li>
                 {% endfor %}
-                {% if not has_reviewed %}
-                <div class="review-options">
-                    <a href="{% url 'add_review' flight.id %}" class="btn btn-primary">Add Review</a>
+            </ul>
+        </div>
+
+        <br>
+
+        <div class="reviews-sidebar">
+            <h2>Reviews</h2>
+            {% for review in reviews %}
+                <div class="review">
+                    <p><strong>{{ review.author.username }}</strong> - Rating: {{ review.rating }}/10</p>
+                    <p>{{ review.text }}</p>
+                    <hr>
                 </div>
-                {% endif %}
+            {% empty %}
+                <p>No reviews yet. Be the first to <a href="{% url 'add_review' flight.id %}">add a review</a>.</p>
+            {% endfor %}
+            {% if not has_reviewed %}
+            <div class="review-options">
+                <a href="{% url 'add_review' flight.id %}" class="btn btn-primary">Add Review</a>
+            </div>
+            {% endif %}
         </div>
     </div>
-
 {% endblock %}

@@ -1,12 +1,13 @@
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView
 
-from .forms import TicketForm, TicketReservationForm, ReviewForm
-from .models import Flight, Ticket, FlightReview
+from .forms import ReviewForm
+from .models import Flight, Ticket, FlightReview, TicketReservation
 
 
 class FlightsList(LoginRequiredMixin, ListView):
@@ -18,19 +19,25 @@ class FlightsList(LoginRequiredMixin, ListView):
 
 
 @login_required(login_url='/accounts/login/')
-def flight_detail(request, flight_id):
+def flight_details(request, flight_id):
     flight = get_object_or_404(Flight, id=flight_id)
     tickets = Ticket.objects.filter(flight=flight)
+    reservations = TicketReservation.objects.filter(flight=flight)
     reviews = FlightReview.objects.filter(flight=flight)
-    has_reviewed = FlightReview.objects.filter(flight=flight, author=request.user).exists()
+    user_reservation = reservations.filter(passenger=request.user).first()
+    has_reviewed = reviews.filter(author=request.user).exists()
 
-    return render(request, 'flights/detail.html', {
+    context = {
         'flight': flight,
         'tickets': tickets,
+        'reservations': reservations if request.user.is_staff else None,
+        'user_reservation': user_reservation,
         'reviews': reviews,
         'has_reviewed': has_reviewed,
-        'form': ReviewForm()
-    })
+        'is_admin': request.user.is_staff,
+    }
+
+    return render(request, 'flights/detail.html', context)
 
 
 @login_required(login_url='/accounts/login/')
@@ -52,50 +59,69 @@ def add_review(request, flight_id):
 
 
 @login_required(login_url='/accounts/login/')
-def edit_ticket(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
+def delete_ticket_reservation(request, reservation_id):
+    reservation = get_object_or_404(TicketReservation, id=reservation_id)
 
-    if ticket.passenger != request.user:
-        return HttpResponseForbidden("You are not authorized to edit this ticket.")
-
-    if request.method == "POST":
-        form = TicketForm(request.POST, instance=ticket)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Ticket updated successfully.")
-            return redirect('flight_details', flight_id=ticket.flight.id)
-    else:
-        form = TicketForm(instance=ticket)
-
-    return render(request, 'tickets/edit.html', {'form': form, 'ticket': ticket})
-
-
-@login_required(login_url='/accounts/login/')
-def delete_ticket(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
-
-    if ticket.passenger != request.user:
-        return HttpResponseForbidden("You are not authorized to delete this ticket.")
+    if reservation.passenger != request.user:
+        return HttpResponseForbidden("You are not authorized to delete this reservation.")
 
     if request.method == "POST":
-        ticket.delete()
-        messages.success(request, "Ticket deleted successfully.")
-        return redirect('flight_details', flight_id=ticket.flight.id)
+        reservation.delete()
+        messages.success(request, "Ticket reservation deleted successfully.")
+        return redirect('flight_details', flight_id=reservation.flight.id)
 
-    return render(request, 'tickets/delete.html', {'ticket': ticket})
+    return render(request, 'tickets/delete_reservation.html', {'reservation': reservation})
 
 
 @login_required(login_url='/accounts/login/')
 def reserve_ticket(request, flight_id):
     flight = get_object_or_404(Flight, id=flight_id)
+
     if request.method == 'POST':
-        form = TicketReservationForm(request.POST, flight=flight)
-        if form.is_valid():
-            ticket = form.save(commit=False)
-            ticket.flight = flight
-            ticket.passenger = request.user
-            ticket.save()
+        if not TicketReservation.objects.filter(flight=flight, passenger=request.user).exists():
+            TicketReservation.objects.create(flight=flight, passenger=request.user)
             return redirect('flight_details', flight_id=flight.id)
+        else:
+            error_message = "You have already reserved a ticket for this flight."
+            return render(request, 'tickets/reserve.html', {'flight': flight, 'error_message': error_message})
+
+    return render(request, 'tickets/reserve.html', {'flight': flight})
+
+
+@staff_member_required
+def confirm_reservation(request, reservation_id):
+    reservation = get_object_or_404(TicketReservation, id=reservation_id)
+
+    if request.method == 'POST':
+        seat_number = request.POST.get('seat_number')
+
+        if Ticket.objects.filter(flight=reservation.flight, seat_number=seat_number).exists():
+            return render(request, 'tickets/confirm_reservation.html', {
+                'reservation': reservation,
+                'error_message': "This seat number is already taken.",
+            })
+
+        Ticket.objects.create(
+            flight=reservation.flight,
+            passenger=reservation.passenger,
+            seat_number=seat_number,
+        )
+        reservation.delete()
+        return redirect('flight_details', flight_id=reservation.flight.id)
+
+    return render(request, 'tickets/confirm_reservation.html', {
+        'reservation': reservation,
+    })
+
+
+@login_required
+def delete_ticket(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+
+    if request.user == ticket.passenger or request.user.is_staff:
+        ticket.delete()
+        messages.success(request, "Ticket deleted successfully.")
     else:
-        form = TicketReservationForm(flight=flight)
-    return render(request, 'tickets/reserve.html', {'flight': flight, 'form': form})
+        messages.error(request, "You do not have permission to delete this ticket.")
+
+    return redirect('flight_details', flight_id=ticket.flight.id)

@@ -1,16 +1,20 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Reserve Ticket{% endblock %}
+{% block title %}Confirm Reservation{% endblock %}
 
 {% block content %}
     <link rel="stylesheet" href="{% static 'css/reserve_ticket.css' %}">
     <div class="reserve-ticket-container">
-        <h1>Reserve a Ticket for Flight {{ flight.flight_number }}</h1>
+        <h1>Confirm Your Reservation</h1>
+        <p>Are you sure you want to reserve a ticket for flight <strong>{{ flight.flight_number }}</strong>?</p>
+        <p>
+            <strong>From:</strong> {{ flight.from_city }}<br>
+            <strong>To:</strong> {{ flight.to_city }}<br>
+        </p>
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Reserve Ticket</button>
+            <button type="submit" class="btn btn-primary">Confirm Reservation</button>
             <a href="{% url 'flight_details' flight.id %}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>

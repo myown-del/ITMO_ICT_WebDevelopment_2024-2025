@@ -34,6 +34,15 @@ class Flight(models.Model):
         return f'{self.flight_number} {self.airline.name}'
 
 
+class TicketReservation(models.Model):
+    flight = models.ForeignKey(Flight, on_delete=models.CASCADE)
+    passenger = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'Flight "{self.flight.flight_number}", ' \
+               f'seat reserved by "{self.passenger.username}"'
+
+
 class Ticket(models.Model):
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE)
     passenger = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
@@ -41,7 +50,7 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f'Flight "{self.flight.flight_number}", ' \
-               f'seat "{self.seat_number}" reserved ' \
+               f'seat "{self.seat_number}" owned ' \
                f'by "{self.passenger.username}"'
 
 

@@ -198,3 +198,55 @@ form p {
 .review-options .btn:hover {
     background-color: #0056b3;
 }
+
+/* Reservation List Styling */
+.reservation-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.reservation-item {
+    background-color: #f8f9fa;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between; /* Space between info and actions */
+    align-items: center;
+}
+
+.reservation-info {
+    font-size: 14px;
+    color: #555;
+}
+
+.reservation-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.reservation-actions .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    color: #fff;
+}
+
+.reservation-actions .btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+.reservation-actions .btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+.reservation-actions .btn:hover {
+    opacity: 0.9;
+}

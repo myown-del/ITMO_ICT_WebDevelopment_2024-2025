@@ -1,17 +1,20 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView
 
 from .forms import TicketForm, TicketReservationForm, ReviewForm
 from .models import Flight, Ticket, FlightReview
 
 
-class FlightsList(ListView):
+class FlightsList(LoginRequiredMixin, ListView):
     model = Flight
     template_name = 'flights/list.html'
     context_object_name = 'flights'
     paginate_by = 10
+    login_url = '/accounts/login/'
 
 
 @login_required(login_url='/accounts/login/')
@@ -48,8 +51,12 @@ def add_review(request, flight_id):
     return render(request, 'reviews/add.html', {'flight': flight, 'form': form})
 
 
+@login_required(login_url='/accounts/login/')
 def edit_ticket(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
+
+    if ticket.passenger != request.user:
+        return HttpResponseForbidden("You are not authorized to edit this ticket.")
 
     if request.method == "POST":
         form = TicketForm(request.POST, instance=ticket)
@@ -63,8 +70,13 @@ def edit_ticket(request, ticket_id):
     return render(request, 'tickets/edit.html', {'form': form, 'ticket': ticket})
 
 
+@login_required(login_url='/accounts/login/')
 def delete_ticket(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
+
+    if ticket.passenger != request.user:
+        return HttpResponseForbidden("You are not authorized to delete this ticket.")
+
     if request.method == "POST":
         ticket.delete()
         messages.success(request, "Ticket deleted successfully.")

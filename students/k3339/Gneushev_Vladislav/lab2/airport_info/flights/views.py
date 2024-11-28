@@ -22,7 +22,7 @@ class FlightsList(LoginRequiredMixin, ListView):
 def flight_details(request, flight_id):
     flight = get_object_or_404(Flight, id=flight_id)
     tickets = Ticket.objects.filter(flight=flight)
-    reservations = TicketReservation.objects.filter(flight=flight)
+    reservations = TicketReservation.objects.filter(flight=flight, ticket__isnull=True)
     reviews = FlightReview.objects.filter(flight=flight)
     user_reservation = reservations.filter(passenger=request.user).first()
     has_reviewed = reviews.filter(author=request.user).exists()
@@ -36,7 +36,6 @@ def flight_details(request, flight_id):
         'has_reviewed': has_reviewed,
         'is_admin': request.user.is_staff,
     }
-
     return render(request, 'flights/detail.html', context)
 
 
@@ -105,8 +104,9 @@ def confirm_reservation(request, reservation_id):
             flight=reservation.flight,
             passenger=reservation.passenger,
             seat_number=seat_number,
+            reservation=reservation
         )
-        reservation.delete()
+
         return redirect('flight_details', flight_id=reservation.flight.id)
 
     return render(request, 'tickets/confirm_reservation.html', {

@@ -36,22 +36,25 @@ class Flight(models.Model):
 
 class TicketReservation(models.Model):
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE)
-    passenger = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
+    passenger = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='reservations')
 
     def __str__(self):
-        return f'Flight "{self.flight.flight_number}", ' \
-               f'seat reserved by "{self.passenger.username}"'
+        return f'Flight "{self.flight.flight_number}", seat reserved by "{self.passenger.username}"'
 
 
 class Ticket(models.Model):
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE)
-    passenger = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
+    passenger = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='tickets')
     seat_number = models.CharField(max_length=4, null=False, unique=True)
+    reservation = models.OneToOneField(
+        'TicketReservation',
+        on_delete=models.CASCADE,
+        null=False,
+        related_name='ticket'
+    )
 
     def __str__(self):
-        return f'Flight "{self.flight.flight_number}", ' \
-               f'seat "{self.seat_number}" owned ' \
-               f'by "{self.passenger.username}"'
+        return f'Flight "{self.flight.flight_number}", seat "{self.seat_number}" owned by "{self.passenger.username}"'
 
 
 class FlightReview(models.Model):

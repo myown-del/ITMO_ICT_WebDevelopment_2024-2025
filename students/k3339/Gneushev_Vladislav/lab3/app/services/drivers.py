@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 
 from app.domain.entities.assignments import DayOfWeek
-from app.domain.entities.drivers import Driver, DriverClass, DriverWorkSchedule, DayWorkingHours
+from app.domain.entities.drivers import Driver, DriverClass, DriverWorkSchedule
+from app.domain.entities.schedule import DayWorkingHours
 from app.infrastructure.database.repositories.assignments import AssignmentRepository
 from app.infrastructure.database.repositories.drivers import DriverRepository
 from app.services.exceptions import EntityNotFound
@@ -110,3 +111,11 @@ class DriverService:
             saturday=schedule[DayOfWeek.saturday],
             sunday=schedule[DayOfWeek.sunday]
         )
+
+    async def get_driver_classes_count(self) -> dict[DriverClass, int]:
+        driver_classes = await self.driver_repo.get_driver_classes()
+        driver_classes_count = {}
+        for driver_class in driver_classes:
+            count = await self.driver_repo.get_driver_count_by_class(driver_class.id)  # todo: убрать N + 1
+            driver_classes_count[driver_class] = count
+        return driver_classes_count

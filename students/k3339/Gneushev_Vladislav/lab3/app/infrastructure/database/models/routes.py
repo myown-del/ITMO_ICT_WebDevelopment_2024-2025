@@ -14,5 +14,6 @@ class RouteDB(Base):
     end_time = Column(String(5), nullable=False)
     interval_seconds = Column(Integer, nullable=False)
     duration_seconds = Column(Integer, nullable=False)
+    length_km = Column(Integer, nullable=False)
 
     assignments = relationship('DriverAssignmentDB', back_populates='route')

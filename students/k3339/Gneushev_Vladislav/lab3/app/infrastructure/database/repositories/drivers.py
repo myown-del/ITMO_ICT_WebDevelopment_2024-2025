@@ -1,7 +1,7 @@
 from adaptix import P
 from adaptix.conversion import allow_unlinked_optional
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, func
 
 from app.domain.entities.drivers import Driver, DriverClass, DriverSalary
 from app.infrastructure.database.converters.drivers import from_driver_dm_to_db, from_driver_db_to_dm
@@ -117,3 +117,8 @@ class DriverRepository(BaseRepository):
         q = delete(DriverClassDB).where(DriverClassDB.id == driver_class_id)
         await self.session.execute(q)
         await self.session.commit()
+
+    async def get_driver_count_by_class(self, driver_class_id: int) -> int:
+        q = select(func.count(DriverDB.id)).where(DriverDB.driver_class_id == driver_class_id)
+        result = await self.session.execute(q)
+        return result.scalar_one()

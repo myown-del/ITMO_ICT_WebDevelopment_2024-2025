@@ -1,16 +1,17 @@
 import logging
-from datetime import datetime
+from datetime import datetime, date
 
 from app.domain.assignments import do_routes_shifts_intersect
 from app.domain.entities.assignments import DriverAssignment, EndAssignmentReason, DayOfWeek
 from app.domain.entities.buses import Bus
 from app.domain.entities.drivers import Driver
-from app.domain.entities.routes import Route
+from app.domain.entities.routes import Route, RouteWorkSchedule
+from app.domain.entities.schedule import DayWorkingHours
 from app.infrastructure.database.repositories.assignments import AssignmentRepository
 from app.infrastructure.database.repositories.buses import BusRepository
 from app.infrastructure.database.repositories.drivers import DriverRepository
 from app.infrastructure.database.repositories.routes import RouteRepository
-from app.services.exceptions import DriverHasActiveAssignment, EntityNotFound
+from app.services.exceptions import DriverHasActiveAssignment, EntityNotFound, AssignmentAlreadyEnded
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,11 @@ class AssignmentService:
         self.route_repo = route_repo
         self.bus_repo = bus_repo
 
-    async def get_assignments(self, active: bool = None) -> list[DriverAssignment]:
+    async def get_assignments(self, active: bool = None, route_id: int = None, ended_on_date: date = None) -> list[DriverAssignment]:
         return await self.assignment_repo.get_assignments(
-            active=active
+            active=active,
+            route_id=route_id,
+            ended_on_date=ended_on_date
         )
 
     async def add_assignment(
@@ -67,7 +70,6 @@ class AssignmentService:
             driver_id=driver_id
         )
         for assignment in driver_current_assigments:
-            logger.info(f"{assignment.route}, {route}")
             if do_routes_shifts_intersect(
                 route_1=assignment.route,
                 route_2=route
@@ -97,7 +99,7 @@ class AssignmentService:
             )
         await self.assignment_repo.delete_assignment(assignment_id)
 
-    async def end_assignment(self, assignment_id: int, reason: EndAssignmentReason) -> None:
+    async def end_assignment(self, assignment_id: int, reason: EndAssignmentReason) -> DriverAssignment:
         assignment = await self.assignment_repo.get_assignment_by_id(assignment_id)
         if not assignment:
             raise EntityNotFound(
@@ -105,5 +107,9 @@ class AssignmentService:
                 field_name='id',
                 value=assignment_id
             )
-        assignment.to_date = datetime.now()
-        await self.assignment_repo.update_assignment(assignment)
+        if assignment.to_date is not None:
+            raise AssignmentAlreadyEnded()
+        return await self.assignment_repo.end_assignment(
+            assignment_id=assignment_id,
+            end_reason=reason
+        )

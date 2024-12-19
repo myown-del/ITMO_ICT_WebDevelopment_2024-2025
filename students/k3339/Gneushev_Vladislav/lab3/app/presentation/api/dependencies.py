@@ -10,8 +10,9 @@ from app.services.jwt import JWTService
 @inject
 async def get_token_payload(
         jwt_service: FromDishka[JWTService],
-        token: str = Header()
+        token: str = Header(alias='Authorization')
 ):
+    token = token.split(' ')[-1]
     try:
         payload = jwt_service.decode_token(token)
     except InvalidToken:

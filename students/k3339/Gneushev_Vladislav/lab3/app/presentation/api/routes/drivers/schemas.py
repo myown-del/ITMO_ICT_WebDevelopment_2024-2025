@@ -43,3 +43,12 @@ class GetWorkScheduleSchema(BaseModel):
     friday: DayWorkingHoursSchema | None
     saturday: DayWorkingHoursSchema | None
     sunday: DayWorkingHoursSchema | None
+
+
+class ClassDriversCountSchema(BaseModel):
+    driver_class: GetDriverClassSchema
+    count: int
+
+
+class DriverClassesCountSchema(BaseModel):
+    driver_classes: list[ClassDriversCountSchema]

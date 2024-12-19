@@ -1,6 +1,6 @@
 from datetime import time
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class GetRouteSchema(BaseModel):
@@ -12,6 +12,7 @@ class GetRouteSchema(BaseModel):
     end_time: time
     interval_seconds: int
     duration_seconds: int
+    length_km: int = Field(..., alias="length")
 
 
 class AddRouteSchema(BaseModel):
@@ -22,3 +23,8 @@ class AddRouteSchema(BaseModel):
     end_time: time
     interval_seconds: int
     duration_seconds: int
+    length_km: int
+
+
+class TotalRoutesLengthSchema(BaseModel):
+    total_length: int = 0

@@ -30,3 +30,7 @@ class TokenExpired(Exception):
 
 class InvalidToken(Exception):
     pass
+
+
+class AssignmentAlreadyEnded(Exception):
+    pass

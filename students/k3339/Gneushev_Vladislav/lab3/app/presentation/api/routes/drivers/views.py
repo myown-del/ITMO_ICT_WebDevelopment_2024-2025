@@ -6,7 +6,7 @@ from starlette import status
 from app.domain.entities.drivers import Driver, DriverClass
 from app.presentation.api.decorators.only_admin import only_admin
 from app.presentation.api.routes.drivers.schemas import GetDriverSchema, AddDriverSchema, GetDriverClassSchema, \
-    AddDriverClassSchema, GetWorkScheduleSchema
+    AddDriverClassSchema, GetWorkScheduleSchema, DriverClassesCountSchema, ClassDriversCountSchema
 from app.services.drivers import DriverService
 
 router = APIRouter(
@@ -146,3 +146,23 @@ async def get_driver_work_schedule(
 ):
     work_schedule = await driver_service.get_driver_work_schedule(driver_id)
     return GetWorkScheduleSchema.model_validate(work_schedule, from_attributes=True)
+
+
+@router.get(
+    "/classes/count",
+    summary="Получить количество водителей в каждом классе",
+    response_model=DriverClassesCountSchema
+)
+async def get_driver_classes_count(
+        driver_service: FromDishka[DriverService],
+):
+    driver_classes_count = await driver_service.get_driver_classes_count()
+    return DriverClassesCountSchema(
+        driver_classes=[
+            ClassDriversCountSchema(
+                driver_class=GetDriverClassSchema.model_validate(driver_class, from_attributes=True),
+                count=drivers_count
+            )
+            for driver_class, drivers_count in driver_classes_count.items()
+        ]
+    )

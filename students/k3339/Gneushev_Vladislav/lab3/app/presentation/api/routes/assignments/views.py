@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
@@ -10,7 +10,7 @@ from app.presentation.api.decorators.only_admin import only_admin
 from app.presentation.api.routes.assignments.schemas import GetAssignmentSchema, AddAssignmentSchema, \
     EndAssignmentSchema
 from app.services.assignments import AssignmentService
-from app.services.exceptions import DriverHasActiveAssignment
+from app.services.exceptions import DriverHasActiveAssignment, AssignmentAlreadyEnded
 
 router = APIRouter(
     prefix="/assignments",
@@ -26,10 +26,14 @@ router = APIRouter(
 )
 async def get_assigments(
         assigment_service: FromDishka[AssignmentService],
-        active: bool = Query(None, description="Активные назначения")
+        active: bool = Query(None, description="Активные назначения"),
+        route_id: int = Query(None, description="ID маршрута"),
+        ended_on_date: date = Query(None, description="Дата завершения назначения")
 ):
     assigments = await assigment_service.get_assignments(
-        active=active
+        active=active,
+        route_id=route_id,
+        ended_on_date=ended_on_date
     )
     return [
         GetAssignmentSchema.model_validate(assigment, from_attributes=True)
@@ -88,10 +92,16 @@ async def end_assignment(
         body: EndAssignmentSchema,
         assignment_service: FromDishka[AssignmentService]
 ):
-    await assignment_service.end_assignment(
-        assignment_id=assignment_id,
-        reason=body.reason
-    )
+    try:
+        await assignment_service.end_assignment(
+            assignment_id=assignment_id,
+            reason=body.reason
+        )
+    except AssignmentAlreadyEnded:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Назначение уже завершено"
+        )
 
 
 @router.get(

@@ -1,4 +1,4 @@
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 
 from app.domain.entities.routes import Route
 from app.infrastructure.database.converters.routes import from_route_db_to_dm, from_route_dm_to_db
@@ -34,3 +34,9 @@ class RouteRepository(BaseRepository):
         q = delete(RouteDB).where(RouteDB.id == route_id)
         await self.session.execute(q)
         await self.session.commit()
+
+    async def get_total_length(self) -> int:
+        q = select(func.sum(RouteDB.length_km))
+        result = await self.session.execute(q)
+        return result.scalar()
+

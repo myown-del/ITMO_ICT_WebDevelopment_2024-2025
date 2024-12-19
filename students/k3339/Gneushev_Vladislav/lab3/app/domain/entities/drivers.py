@@ -1,13 +1,16 @@
 from dataclasses import dataclass
-from datetime import time
 
 from app.domain.entities.base import Entity
+from app.domain.entities.schedule import WorkSchedule
 
 
 @dataclass
 class DriverClass(Entity):
     id: int | None
     name: str
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 @dataclass
@@ -30,18 +33,5 @@ class Driver(Entity):
 
 
 @dataclass
-class DayWorkingHours:
-    start_time: time
-    end_time: time
-
-
-@dataclass
-class DriverWorkSchedule(Entity):
+class DriverWorkSchedule(WorkSchedule):
     driver: Driver
-    monday: DayWorkingHours | None
-    tuesday: DayWorkingHours | None
-    wednesday: DayWorkingHours | None
-    thursday: DayWorkingHours | None
-    friday: DayWorkingHours | None
-    saturday: DayWorkingHours | None
-    sunday: DayWorkingHours | None

@@ -14,6 +14,7 @@ nav:
     - Пути: lab2/urls.md
     - Фронтенд: lab2/frontend.md
   - Лабораторная работа 3:
+    - Практическая работа: lab3/practical_exercises.md
     - Предметная область: lab3/system_info.md
     - Архитектура проекта: lab3/architecture.md
     - Эндпоинты: lab3/endpoints.md

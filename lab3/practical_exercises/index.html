@@ -913,25 +913,27 @@ owner_id = random_owner.id
 print(f&quot;Случайный владелец: {random_owner}, ID: {owner_id}&quot;)
 
 driver_license = DriverLicense.objects.get(owner_id=owner_id)
-print(f&quot;Удостоверение владельца с ID {owner_id}: {driver_license}&quot;)
+print(f&quot;Удостоверение владельца {owner_id}: {driver_license}&quot;)
 print()
 
 
 # 4 запрос
-red_cars = Car.objects.filter(color=&quot;Red&quot;)
+red_car_owners = CarOwner.objects.filter(
+    ownerships__car__color__iexact='Red'
+).distinct()
 print(&quot;Владельцы красных машин:&quot;)
-for car in red_cars:
-    owners = car.owner.all()
-    for owner in owners:
-        print(f&quot;- {owner}&quot;)
+for owner in red_car_owners:
+    print(f&quot;- {owner}&quot;)
 print()
 
 
 # 5 запрос
-owners_with_cars_from_2010 = Ownership.objects.filter(start_date__year=2010)
+owners_from_2010 = CarOwner.objects.filter(
+    ownerships__start_date__year=2010
+).distinct()
 print(&quot;Владельцы, чей год владения машиной начинается с 2010:&quot;)
-for ownership in owners_with_cars_from_2010:
-    print(f&quot;- {ownership.owner}&quot;)
+for owner in owners_from_2010:
+    print(f&quot;- {owner}&quot;)
 </code></pre>
 <p>Вывод в консоль:</p>
 <pre><code>Все машины марки Toyota:
@@ -941,7 +943,7 @@ for ownership in owners_with_cars_from_2010:
 - John Doe
 
 Случайный владелец: John Doe, ID: 1
-Удостоверение владельца с ID 1: John Doe - DL123456 (B)
+Удостоверение владельца 1: John Doe - DL123456 (B)
 
 Владельцы красных машин:
 - Peter Brown
@@ -983,14 +985,14 @@ print()
 # 3 запрос
 drivers_with_car_count = CarOwner.objects.annotate(car_count=Count('ownerships'))
 for driver in drivers_with_car_count:
-    print(f&quot;- Водитель: {driver}, Количество машин: {driver.car_count}&quot;)
+    print(f&quot;- Водитель: {driver}, машин: {driver.car_count}&quot;)
 print()
 
 # 4 запрос
 cars_per_brand = Car.objects.values('brand').annotate(count=Count('id')).order_by('-count')
 print(&quot;Количество машин каждой марки:&quot;)
 for entry in cars_per_brand:
-    print(f&quot;- Марка: {entry['brand']}, Количество машин: {entry['count']}&quot;)
+    print(f&quot;- Марка: {entry['brand']}, машин: {entry['count']}&quot;)
 print()
 
 # 5 запрос
@@ -1000,34 +1002,34 @@ owners_sorted_by_license_date = (
 )
 print(&quot;Владельцы, отсортированные по дате выдачи удостоверения:&quot;)
 for owner in owners_sorted_by_license_date:
-    print(f&quot;- Владелец: {owner}, Дата выдачи первого удостоверения: {owner.earliest_license_date}&quot;)
+    print(f&quot;- Владелец: {owner}, дата выдачи первого удостоверения: {owner.earliest_license_date}&quot;)
 </code></pre>
 <p>Вывод в консоль:</p>
 <pre><code>Дата выдачи самого старшего водительского удостоверения: 2008-03-10
 
 Самая поздняя дата владения машиной: None
 
-- Водитель: Anna Johnson, Количество машин: 1
-- Водитель: Jane Doe, Количество машин: 1
-- Водитель: John Doe, Количество машин: 1
-- Водитель: Peter Brown, Количество машин: 1
-- Водитель: Robert Smith, Количество машин: 1
-- Водитель: William Jenkins, Количество машин: 1
+- Водитель: Anna Johnson, машин: 1
+- Водитель: Jane Doe, машин: 1
+- Водитель: John Doe, машин: 1
+- Водитель: Peter Brown, машин: 1
+- Водитель: Robert Smith, машин: 1
+- Водитель: William Jenkins, машин: 1
 
 Количество машин каждой марки:
-- Марка: Ford, Количество машин: 2
-- Марка: Toyota, Количество машин: 1
-- Марка: Tesla, Количество машин: 1
-- Марка: Mercedes, Количество машин: 1
-- Марка: BMW, Количество машин: 1
+- Марка: Ford, машин: 2
+- Марка: Toyota, машин: 1
+- Марка: Tesla, машин: 1
+- Марка: Mercedes, машин: 1
+- Марка: BMW, машин: 1
 
 Владельцы, отсортированные по дате выдачи удостоверения:
-- Владелец: Robert Smith, Дата выдачи первого удостоверения: 2008-03-10
-- Владелец: John Doe, Дата выдачи первого удостоверения: 2010-05-20
-- Владелец: Anna Johnson, Дата выдачи первого удостоверения: 2012-12-05
-- Владелец: Jane Doe, Дата выдачи первого удостоверения: 2015-06-15
-- Владелец: William Jenkins, Дата выдачи первого удостоверения: 2015-09-25
-- Владелец: Peter Brown, Дата выдачи первого удостоверения: 2018-09-25
+- Владелец: Robert Smith, дата выдачи первого удостоверения: 2008-03-10
+- Владелец: John Doe, дата выдачи первого удостоверения: 2010-05-20
+- Владелец: Anna Johnson, дата выдачи первого удостоверения: 2012-12-05
+- Владелец: Jane Doe, дата выдачи первого удостоверения: 2015-06-15
+- Владелец: William Jenkins, дата выдачи первого удостоверения: 2015-09-25
+- Владелец: Peter Brown, дата выдачи первого удостоверения: 2018-09-25
 </code></pre>
 
 

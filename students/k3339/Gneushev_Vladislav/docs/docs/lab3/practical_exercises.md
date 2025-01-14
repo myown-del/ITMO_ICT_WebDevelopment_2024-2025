@@ -115,20 +115,22 @@ print()
 
 
 # 4 запрос
-red_cars = Car.objects.filter(color="Red")
+red_car_owners = CarOwner.objects.filter(
+    ownerships__car__color__iexact='Red'
+).distinct()
 print("Владельцы красных машин:")
-for car in red_cars:
-    owners = car.owner.all()
-    for owner in owners:
-        print(f"- {owner}")
+for owner in red_car_owners:
+    print(f"- {owner}")
 print()
 
 
 # 5 запрос
-owners_with_cars_from_2010 = Ownership.objects.filter(start_date__year=2010)
+owners_from_2010 = CarOwner.objects.filter(
+    ownerships__start_date__year=2010
+).distinct()
 print("Владельцы, чей год владения машиной начинается с 2010:")
-for ownership in owners_with_cars_from_2010:
-    print(f"- {ownership.owner}")
+for owner in owners_from_2010:
+    print(f"- {owner}")
 ```
 
 Вывод в консоль:

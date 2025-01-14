@@ -20,5 +20,8 @@ nav:
     - Эндпоинты: lab3/endpoints.md
     - Модели базы данных: lab3/db_models.md
     - Доменные модели: lab3/dm_models.md
+  - Лабораторная работа 4:
+    - Интерфейсы: lab4/interfaces.md
+    - Код: lab4/code.md
 theme:
  name: material
